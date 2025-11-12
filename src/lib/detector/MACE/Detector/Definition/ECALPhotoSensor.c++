@@ -15,9 +15,12 @@
 #include "G4LogicalSkinSurface.hh"
 #include "G4NistManager.hh"
 #include "G4OpticalSurface.hh"
+#include "G4PVParameterised.hh"
 #include "G4PVPlacement.hh"
+#include "G4SubtractionSolid.hh"
 #include "G4SystemOfUnits.hh"
 #include "G4Tubs.hh"
+#include "G4VPVParameterisation.hh"
 
 #include "fmt/format.h"
 
@@ -87,9 +90,9 @@ auto ECALPhotoSensor::ConstructMPPC(G4bool checkOverlaps) -> void {
     siliconeGreasePropertiesTable->AddProperty("ABSLENGTH", {minPhotonEnergy, maxPhotonEnergy}, {100_cm, 100_cm});
     siliconeGrease->SetMaterialPropertiesTable(siliconeGreasePropertiesTable);
 
-    const auto epoxyPropertiesTable{new G4MaterialPropertiesTable};
-    epoxyPropertiesTable->AddProperty("RINDEX", {minPhotonEnergy, maxPhotonEnergy}, {1.57, 1.57});
-    epoxy->SetMaterialPropertiesTable(epoxyPropertiesTable);
+    const auto windowPropertiesTable{new G4MaterialPropertiesTable};
+    windowPropertiesTable->AddProperty("RINDEX", {minPhotonEnergy, maxPhotonEnergy}, {1.57, 1.57});
+    epoxy->SetMaterialPropertiesTable(windowPropertiesTable);
     const auto couplerSurfacePropertiesTable{new G4MaterialPropertiesTable};
     couplerSurfacePropertiesTable->AddProperty("TRANSMITTANCE", {minPhotonEnergy, maxPhotonEnergy}, {1., 1.});
 
@@ -104,20 +107,19 @@ auto ECALPhotoSensor::ConstructMPPC(G4bool checkOverlaps) -> void {
     /////////////////////////////////////////////
     // Construct Volumes
     /////////////////////////////////////////////
-    const auto& moduleList{ecal.Array().moduleList};
+    const auto& typeMap{ecal.Mesh().fTypeMap};
     const auto& moduleSelection{ecal.ModuleSelection()};
     std::map<int, std::vector<int>> idListOfType;
-    for (auto&& module : std::as_const(moduleList)) {
-        idListOfType[module.typeID].emplace_back(module.moduleID);
+    for (auto&& [moduleID, type] : typeMap) {
+        idListOfType[type].emplace_back(moduleID);
     }
 
     std::vector<int> chosenType;
-    chosenType.reserve(moduleSelection.size());
     for (auto&& chosen : moduleSelection) {
-        chosenType.emplace_back(moduleList.at(chosen).typeID);
+        chosenType.emplace_back(typeMap.at(chosen));
     }
     for (auto&& [type, moduleIDList] : idListOfType) { // loop over type(10 total)
-        if (not chosenType.empty() and std::ranges::find(chosenType, type) == chosenType.end()) {
+        if ((not chosenType.empty()) and (std::find(chosenType.begin(), chosenType.end(), type) == chosenType.end())) {
             continue;
         }
 
@@ -150,7 +152,7 @@ auto ECALPhotoSensor::ConstructMPPC(G4bool checkOverlaps) -> void {
         }
 
         for (auto moduleID : moduleIDList) { // loop over ID.s of a type
-            if ((not moduleSelection.empty()) and (std::ranges::find(moduleSelection, moduleID) == moduleSelection.end())) {
+            if ((not moduleSelection.empty()) and (std::find(moduleSelection.begin(), moduleSelection.end(), moduleID) == moduleSelection.end())) {
                 continue;
             }
             const auto couplerTransform{ecal.ComputeTransformToOuterSurfaceWithOffset(moduleID,
@@ -246,12 +248,12 @@ auto ECALPhotoSensor::ConstructPMT(G4bool checkOverlaps) -> void {
     siliconeGreasePropertiesTable->AddProperty("ABSLENGTH", {minPhotonEnergy, maxPhotonEnergy}, {100_cm, 100_cm});
     siliconeGrease->SetMaterialPropertiesTable(siliconeGreasePropertiesTable);
 
-    const auto epoxyPropertiesTable{new G4MaterialPropertiesTable};
-    epoxyPropertiesTable->AddProperty("RINDEX", {minPhotonEnergy, maxPhotonEnergy}, {1.49, 1.49}); // ET 9269B 9956B
-    glass->SetMaterialPropertiesTable(epoxyPropertiesTable);
+    const auto windowPropertiesTable{new G4MaterialPropertiesTable};
+    windowPropertiesTable->AddProperty("RINDEX", {minPhotonEnergy, maxPhotonEnergy}, {1.49, 1.49});
+    glass->SetMaterialPropertiesTable(windowPropertiesTable);
 
-    const std::vector<G4double>& cathodeSurfacePropertiesEnergy{pmtEnergyBin};
-    const std::vector<G4double>& cathodeSurfacePropertiesEfficiency{pmtQuantumEfficiency};
+    std::vector<G4double> cathodeSurfacePropertiesEnergy{pmtEnergyBin};
+    std::vector<G4double> cathodeSurfacePropertiesEfficiency{pmtQuantumEfficiency};
     const auto couplerSurfacePropertiesTable{new G4MaterialPropertiesTable};
     couplerSurfacePropertiesTable->AddProperty("TRANSMITTANCE", {minPhotonEnergy, maxPhotonEnergy}, {1., 1.});
 
@@ -267,21 +269,20 @@ auto ECALPhotoSensor::ConstructPMT(G4bool checkOverlaps) -> void {
     // Construct Volumes
     /////////////////////////////////////////////
 
-    const auto& moduleList{ecal.Array().moduleList};
+    const auto& typeMap{ecal.Mesh().fTypeMap};
     const auto& moduleSelection{ecal.ModuleSelection()};
     std::map<int, std::vector<int>> idListOfType;
-    for (auto&& module : std::as_const(moduleList)) {
-        idListOfType[module.typeID].emplace_back(module.moduleID);
+    for (auto&& [moduleID, type] : typeMap) {
+        idListOfType[type].emplace_back(moduleID);
     }
 
     std::vector<int> chosenType;
-    chosenType.reserve(moduleSelection.size());
     for (auto&& chosen : moduleSelection) {
-        chosenType.emplace_back(moduleList.at(chosen).typeID);
+        chosenType.emplace_back(typeMap.at(chosen));
     }
     const auto& pmtDimensions{ecal.PMTDimensions()};
     for (auto&& [typeID, moduleIDList] : std::as_const(idListOfType)) {
-        if ((not chosenType.empty()) and (std::ranges::find(chosenType, typeID) == chosenType.end())) {
+        if ((not chosenType.empty()) and (std::find(chosenType.begin(), chosenType.end(), typeID) == chosenType.end())) {
             continue;
         }
 
@@ -300,7 +301,7 @@ auto ECALPhotoSensor::ConstructPMT(G4bool checkOverlaps) -> void {
         const auto logicCathode{Make<G4LogicalVolume>(solidCathode, bialkali, name + "PMCathode")};
 
         for (auto&& moduleID : moduleIDList) {
-            if ((not moduleSelection.empty()) and (std::ranges::find(moduleSelection, moduleID) == moduleSelection.end())) {
+            if ((not moduleSelection.empty()) and (std::find(moduleSelection.begin(), moduleSelection.end(), moduleID) == moduleSelection.end())) {
                 continue;
             }
 

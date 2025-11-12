@@ -37,11 +37,11 @@ using namespace Mustard::LiteralUnit::Time;
 using namespace Mustard::MathConstant;
 using namespace Mustard::PhysicalConstant;
 
-auto Smear(float e) -> float {
+auto smear(float e) -> float {
     e *= 1000;
     constexpr auto a = -7.47073293;
     constexpr auto b = 2.76377561;
-    auto fwhm = a + b * std::sqrt(e);
+    auto fwhm = a + b * sqrt(e);
     auto smearedEnergy = gRandom->Gaus(e, fwhm / 2.35482);
     return smearedEnergy / 1000;
 }
@@ -58,7 +58,15 @@ auto ReconECAL::Main(int argc, char* argv[]) const -> int {
     }
 
     const auto& ecal{Detector::Description::ECAL::Instance()};
-    const auto& moduleList{ecal.Array().moduleList};
+    const auto& faceList{ecal.Mesh().fFaceList};
+    const auto& clusterMap{ecal.Mesh().fClusterMap};
+
+    std::map<int, CLHEP::Hep3Vector> centroidMap;
+
+    for (int i{}; auto&& [centroid, _1, _2] : std::as_const(faceList)) {
+        centroidMap[i] = centroid;
+        i++;
+    }
 
     TFile outputFile{Mustard::Parallel::ProcessSpecificPath("dual_coin.root").generic_string().c_str(), "RECREATE"};
     using ECALEnergy = Mustard::Data::TupleModel<Mustard::Data::Value<float, "Edep", "Energy deposition">,
@@ -101,13 +109,13 @@ auto ReconECAL::Main(int argc, char* argv[]) const -> int {
             auto firstSeedModule = potentialSeedModule.begin();
             auto secondSeedModule = std::ranges::next(potentialSeedModule.begin());
 
-            const auto clustering = [&](std::unordered_set<short>& set, std::vector<short>::iterator it) {
+            const auto Clustering = [&](std::unordered_set<short>& set, std::vector<short>::iterator it) {
                 set.insert(*it); // add seed module
-                for (auto&& m : moduleList[*it].neighborModuleID) {
+                for (auto&& m : clusterMap.at(*it)) {
                     set.insert(m); // add 1st layer
-                    for (auto&& n : moduleList[m].neighborModuleID) {
-                        set.insert(n);                                                                            // add 2nd layer
-                        set.insert(moduleList[n].neighborModuleID.begin(), moduleList[n].neighborModuleID.end()); // add 3rd layer
+                    for (auto&& n : clusterMap.at(m)) {
+                        set.insert(n);                                                // add 2nd layer
+                        set.insert(clusterMap.at(n).begin(), clusterMap.at(n).end()); // add 3rd layer
                     }
                 }
 
@@ -116,28 +124,24 @@ auto ReconECAL::Main(int argc, char* argv[]) const -> int {
                     if (not hitDict.contains(m) or Get<"Edep">(*hitDict.at(m)) < 50_keV) {
                         continue;
                     }
-                    energy += Smear(Get<"Edep">(*hitDict.at(m)));
+                    energy += smear(Get<"Edep">(*hitDict.at(m)));
                 }
                 return energy;
             };
 
-            auto firstClusterEnergy = clustering(firstCluster, firstSeedModule);
-            auto secondClusterEnergy = clustering(secondCluster, secondSeedModule);
+            auto firstClusterEnergy = Clustering(firstCluster, firstSeedModule);
+            auto secondClusterEnergy = Clustering(secondCluster, secondSeedModule);
 
             if (firstClusterEnergy > 590_keV or secondClusterEnergy > 590_keV) {
                 return;
             }
-
-            const auto& c1{moduleList.at(*firstSeedModule).centroid};
-            const auto& c2{moduleList.at(*secondSeedModule).centroid};
-            const auto theta{c1.angle(c2)};
 
             Mustard::Data::Tuple<ECALEnergy> energyTuple;
             Get<"Edep">(energyTuple) = firstClusterEnergy + secondClusterEnergy;
             Get<"Edep1">(energyTuple) = firstClusterEnergy;
             Get<"Edep2">(energyTuple) = secondClusterEnergy;
             Get<"dE">(energyTuple) = std::abs(firstClusterEnergy - secondClusterEnergy);
-            Get<"theta">(energyTuple) = theta;
+            Get<"theta">(energyTuple) = centroidMap.at(*firstSeedModule).angle(centroidMap.at(*secondSeedModule));
             Get<"dt0">(energyTuple) = std::abs(*Get<"t0">(*hitDict.at(*firstSeedModule)) - *Get<"t0">(*hitDict.at(*secondSeedModule)));
             reconEnergy.Fill(std::move(energyTuple));
         });

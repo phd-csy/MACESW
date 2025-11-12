@@ -50,12 +50,12 @@ auto DetectorConstruction::Construct() -> G4VPhysicalVolume* {
     fWorld = std::make_unique<PhaseI::World>();
     auto& ecalCrystal{fWorld->NewDaughter<ECALCrystal>(fCheckOverlap)};
     auto& ecalPhotoSensor{fWorld->NewDaughter<ECALPhotoSensor>(fCheckOverlap)};
-    auto& centralBeamPipe{fWorld->NewDaughter<PhaseI::CentralBeamPipe>(fCheckOverlap)};
+    // auto& centralBeamPipe{fWorld->NewDaughter<PhaseI::CentralBeamPipe>(fCheckOverlap)};
     // auto& sciFiTracker{fWorld->NewDaughter<PhaseI::SciFiTracker>(fCheckOverlap)};
     // auto& ttc{fWorld->NewDaughter<PhaseI::TTC>(fCheckOverlap)};
 
-    centralBeamPipe.NewDaughter<PhaseI::Target>(fCheckOverlap);
-    centralBeamPipe.NewDaughter<PhaseI::Degrader>(fCheckOverlap);
+    // centralBeamPipe.NewDaughter<PhaseI::Target>(fCheckOverlap);
+    // centralBeamPipe.NewDaughter<PhaseI::Degrader>(fCheckOverlap);
 
     const auto& ecalName{MACE::Detector::Description::ECAL::Instance().Name()};
     const auto& scifiName{MACE::PhaseI::Detector::Description::SciFiTracker::Instance().Name()};

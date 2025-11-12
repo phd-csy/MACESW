@@ -1,78 +1,73 @@
 #pragma once
 
-#include "Mustard/Detector/Description/DescriptionWithCacheBase.h++"
+#include "Mustard/Detector/Description/DescriptionBase.h++"
 
 #include "CLHEP/Geometry/Point3D.h"
 #include "CLHEP/Geometry/Transform3D.h"
 #include "CLHEP/Vector/ThreeVector.h"
 
 #include "muc/array"
-#include "muc/hash_map"
 
-#include "gsl/gsl"
-
-#include <unordered_set>
 #include <vector>
 
 namespace MACE::Detector::Description {
 
-class ECAL final : public Mustard::Detector::Description::DescriptionWithCacheBase<ECAL> {
+class ECAL final : public Mustard::Detector::Description::DescriptionBase<ECAL> {
     friend Mustard::Env::Memory::SingletonInstantiator;
 
 private:
     ECAL();
-    ~ECAL() override = default;
+    ~ECAL() = default;
 
 public:
-    auto NSubdivision() const -> auto { return *fNSubdivision; }
-    auto InnerRadius() const -> auto { return *fInnerRadius; }
-    auto CrystalHypotenuse() const -> auto { return *fCrystalHypotenuse; }
-    auto CrystalPackageThickness() const -> auto { return *fCrystalPackageThickness; }
-    auto UpstreamWindowRadius() const -> auto { return *fUpstreamWindowRadius; }
-    auto DownstreamWindowRadius() const -> auto { return *fDownstreamWindowRadius; }
+    auto NSubdivision() const -> auto { return fNSubdivision; }
+    auto InnerRadius() const -> auto { return fInnerRadius; }
+    auto CrystalHypotenuse() const -> auto { return fCrystalHypotenuse; }
+    auto UpstreamWindowRadius() const -> auto { return fUpstreamWindowRadius; }
+    auto DownstreamWindowRadius() const -> auto { return fDownstreamWindowRadius; }
+    auto ScintillationEnergyBin() const -> const auto& { return fScintillationEnergyBin; }
+    auto ScintillationComponent1() const -> const auto& { return fScintillationComponent1; }
+    auto ScintillationYield() const -> auto { return fScintillationYield; }
+    auto ScintillationTimeConstant1() const -> auto { return fScintillationTimeConstant1; }
+    auto ResolutionScale() const -> auto { return fResolutionScale; }
 
-    auto Array() const -> const auto& { return *fArray; }
-    auto NUnit() const -> auto { return Array().moduleList.size(); }
-    auto ComputeTransformToOuterSurfaceWithOffset(int moduleID, double offsetInNormalDirection) const -> HepGeom::Transform3D;
-    auto ModuleSelection() const -> const auto& { return *fModuleSelection; }
+    auto UsePhaseICrystal() const -> auto { return fUsePhaseICrystal; }
+    auto UseMPPC() const -> auto { return fUseMPPC; }
 
-    auto ScintillationEnergyBin() const -> auto& { return *fScintillationEnergyBin; }
-    auto ScintillationComponent1() const -> auto& { return *fScintillationComponent1; }
-    auto ScintillationYield() const -> auto { return *fScintillationYield; }
-    auto ScintillationTimeConstant1() const -> auto { return *fScintillationTimeConstant1; }
-    auto ResolutionScale() const -> auto { return *fResolutionScale; }
+    auto PMTDimensions() const -> const auto& { return fPMTDimensions; }
+    auto PMTCouplerThickness() const -> auto { return fPMTCouplerThickness; }
+    auto PMTWindowThickness() const -> auto { return fPMTWindowThickness; }
+    auto PMTCathodeThickness() const -> auto { return fPMTCathodeThickness; }
+    auto PMTEnergyBin() const -> const auto& { return fPMTEnergyBin; }
+    auto PMTQuantumEfficiency() const -> const auto& { return fPMTQuantumEfficiency; }
 
-    auto UsePhaseICrystal() const -> auto { return *fUsePhaseICrystal; }
-    auto UseMPPC() const -> auto { return *fUseMPPC; }
+    auto MPPCNPixelRows() const -> const auto& { return fMPPCNPixelRows; }
+    auto MPPCPixelSizeSet() const -> const auto& { return fMPPCPixelSizeSet; }
+    auto MPPCPitch() const -> auto { return fMPPCPitch; }
+    auto MPPCThickness() const -> auto { return fMPPCThickness; }
+    auto MPPCCouplerThickness() const -> auto { return fMPPCCouplerThickness; }
+    auto MPPCWindowThickness() const -> auto { return fMPPCWindowThickness; }
+    auto MPPCEnergyBin() const -> const auto& { return fMPPCEnergyBin; }
+    auto MPPCEfficiency() const -> const auto& { return fMPPCEfficiency; }
 
-    auto PMTDimensions() const -> const auto& { return *fPMTDimensions; }
-    auto PMTCouplerThickness() const -> auto { return *fPMTCouplerThickness; }
-    auto PMTWindowThickness() const -> auto { return *fPMTWindowThickness; }
-    auto PMTCathodeThickness() const -> auto { return *fPMTCathodeThickness; }
-    auto PMTEnergyBin() const -> const auto& { return *fPMTEnergyBin; }
-    auto PMTQuantumEfficiency() const -> const auto& { return *fPMTQuantumEfficiency; }
+    auto Mesh() const -> const auto& { return fMeshManager.Get(this); }
+    auto NUnit() const -> auto { return Mesh().fFaceList.size(); }
+    auto ComputeTransformToOuterSurfaceWithOffset(int cellID, double offsetInNormalDirection) const -> HepGeom::Transform3D;
 
-    auto MPPCNPixelRows() const -> const auto& { return *fMPPCNPixelRows; }
-    auto MPPCPixelSizeSet() const -> const auto& { return *fMPPCPixelSizeSet; }
-    auto MPPCPitch() const -> auto { return *fMPPCPitch; }
-    auto MPPCThickness() const -> auto { return *fMPPCThickness; }
-    auto MPPCCouplerThickness() const -> auto { return *fMPPCCouplerThickness; }
-    auto MPPCWindowThickness() const -> auto { return *fMPPCWindowThickness; }
-    auto MPPCEnergyBin() const -> const auto& { return *fMPPCEnergyBin; }
-    auto MPPCEfficiency() const -> const auto& { return *fMPPCEfficiency; }
-
-    auto WaveformIntegralTime() const -> auto { return *fWaveformIntegralTime; }
+    auto ModuleSelection() const -> const auto& { return fModuleSelection; }
+    auto WaveformIntegralTime() const -> auto { return fWaveformIntegralTime; }
+    auto EnergyFraming() const -> auto& { return fEnergyFraming; }
+    auto EnergyResolutionFWHM() const -> auto { return fEnergyResolutionFWHM; }
+    auto TimeResolutionFWHM() const -> auto { return fTimeResolutionFWHM; }
+    auto SpatialResolutionFWHM() const -> auto { return fSpatialResolutionFWHM; }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    auto NSubdivision(int val) -> void { fNSubdivision = val; }
-    auto InnerRadius(double val) -> void { fInnerRadius = val; }
-    auto CrystalHypotenuse(double val) -> void { fCrystalHypotenuse = val; }
-    auto CrystalPackageThickness(double val) -> void { fCrystalPackageThickness = val; }
-    auto UpstreamWindowRadius(double val) -> void { fUpstreamWindowRadius = val; }
-    auto DownstreamWindowRadius(double val) -> void { fDownstreamWindowRadius = val; }
-    auto ModuleSelection(std::vector<int> val) { fModuleSelection = std::move(val); }
-
+    auto NSubdivision(int val) -> void { fNSubdivision = val, SetGeometryOutdated(); }
+    auto InnerRadius(double val) -> void { fInnerRadius = val, SetGeometryOutdated(); }
+    auto CrystalHypotenuse(double val) -> void { fCrystalHypotenuse = val, SetGeometryOutdated(); }
+    auto UpstreamWindowRadius(double val) -> void { fUpstreamWindowRadius = val, SetGeometryOutdated(); }
+    auto DownstreamWindowRadius(double val) -> void { fDownstreamWindowRadius = val, SetGeometryOutdated(); }
     auto ScintillationEnergyBin(std::vector<double> val) -> void { fScintillationEnergyBin = std::move(val); }
     auto ScintillationComponent1(std::vector<double> val) -> void { fScintillationComponent1 = std::move(val); }
     auto ScintillationYield(double val) -> void { fScintillationYield = val; }
@@ -98,63 +93,86 @@ public:
     auto MPPCEnergyBin(std::vector<double> val) -> void { fMPPCEnergyBin = std::move(val); }
     auto MPPCEfficiency(std::vector<double> val) -> void { fMPPCEfficiency = std::move(val); }
 
+    auto ModuleSelection(std::vector<int> val) { fModuleSelection = std::move(val); }
     auto WaveformIntegralTime(double val) { fWaveformIntegralTime = val; }
+    auto EnergyFraming(muc::array2d val) { fEnergyFraming = std::move(val); }
+    auto EnergyResolutionFWHM(double val) { fEnergyResolutionFWHM = val; }
+    auto TimeResolutionFWHM(double val) { fTimeResolutionFWHM = val; }
+    auto SpatialResolutionFWHM(double val) { fSpatialResolutionFWHM = val; }
 
-    struct ArrayInformation {
-        struct Module {
-            int moduleID{};
-            std::unordered_set<int> neighborModuleID{};
-            int typeID{};
-            CLHEP::Hep3Vector centroid{};
-            CLHEP::Hep3Vector normal{};
-            std::vector<gsl::index> vertexIndex{};
+    struct MeshInformation {
+    private:
+        struct Face {
+            CLHEP::Hep3Vector centroid;
+            CLHEP::Hep3Vector normal;
+            std::vector<std::ptrdiff_t> vertexIndex;
         };
-        std::vector<HepGeom::Point3D<double>> vertexList{};
-        std::vector<Module> moduleList{};
+
+    public:
+        std::vector<HepGeom::Point3D<double>> fVertex;
+        std::vector<Face> fFaceList;
+        std::map<int, int> fTypeMap;
+        std::map<int, std::vector<int>> fClusterMap;
     };
 
 private:
-    auto CalculateArrayInformation() const -> ArrayInformation;
+    class MeshManager {
+    public:
+        auto SetOutdated() -> void { fOutdated = true; }
+        auto Get(const ECAL* ecal) -> const MeshInformation&;
+
+    private:
+        bool fOutdated = true;
+        MeshInformation fMesh;
+    };
+
+    inline auto SetGeometryOutdated() const -> void;
+    auto ComputeMesh() const -> MeshInformation;
 
     auto ImportAllValue(const YAML::Node& node) -> void override;
     auto ExportAllValue(YAML::Node& node) const -> void override;
 
 private:
-    Simple<int> fNSubdivision;
-    Simple<double> fInnerRadius;
-    Simple<double> fCrystalHypotenuse;
-    Simple<double> fCrystalPackageThickness;
-    Simple<double> fUpstreamWindowRadius;
-    Simple<double> fDownstreamWindowRadius;
-    Cached<ArrayInformation> fArray;
-    Simple<std::vector<int>> fModuleSelection;
+    int fNSubdivision;
+    double fInnerRadius;
+    double fCrystalHypotenuse;
+    double fUpstreamWindowRadius;
+    double fDownstreamWindowRadius;
+    std::vector<double> fScintillationEnergyBin;
+    std::vector<double> fScintillationComponent1;
+    double fScintillationYield;
+    double fScintillationTimeConstant1;
+    double fResolutionScale;
 
-    Simple<std::vector<double>> fScintillationEnergyBin;
-    Simple<std::vector<double>> fScintillationComponent1;
-    Simple<double> fScintillationYield;
-    Simple<double> fScintillationTimeConstant1;
-    Simple<double> fResolutionScale;
+    bool fUsePhaseICrystal;
+    bool fUseMPPC;
 
-    Simple<bool> fUsePhaseICrystal;
-    Simple<bool> fUseMPPC;
+    std::vector<muc::array3d> fPMTDimensions;
+    double fPMTCouplerThickness;
+    double fPMTWindowThickness;
+    double fPMTCathodeThickness;
+    std::vector<double> fPMTEnergyBin;
+    std::vector<double> fPMTQuantumEfficiency;
 
-    Simple<std::vector<muc::array3d>> fPMTDimensions;
-    Simple<double> fPMTCouplerThickness;
-    Simple<double> fPMTWindowThickness;
-    Simple<double> fPMTCathodeThickness;
-    Simple<std::vector<double>> fPMTEnergyBin;
-    Simple<std::vector<double>> fPMTQuantumEfficiency;
+    std::vector<int> fMPPCNPixelRows;
+    std::vector<double> fMPPCPixelSizeSet;
+    double fMPPCPitch;
+    double fMPPCThickness;
+    double fMPPCCouplerThickness;
+    double fMPPCWindowThickness;
+    std::vector<double> fMPPCEnergyBin;
+    std::vector<double> fMPPCEfficiency;
 
-    Simple<std::vector<int>> fMPPCNPixelRows;
-    Simple<std::vector<double>> fMPPCPixelSizeSet;
-    Simple<double> fMPPCPitch;
-    Simple<double> fMPPCThickness;
-    Simple<double> fMPPCCouplerThickness;
-    Simple<double> fMPPCWindowThickness;
-    Simple<std::vector<double>> fMPPCEnergyBin;
-    Simple<std::vector<double>> fMPPCEfficiency;
+    mutable MeshManager fMeshManager;
 
-    Simple<double> fWaveformIntegralTime;
+    std::vector<int> fModuleSelection;
+    double fWaveformIntegralTime;
+    muc::array2d fEnergyFraming;
+    double fEnergyResolutionFWHM;
+    double fTimeResolutionFWHM;
+    double fSpatialResolutionFWHM;
 };
 
 } // namespace MACE::Detector::Description
+
+#include "MACE/Detector/Description/ECAL.inl"
