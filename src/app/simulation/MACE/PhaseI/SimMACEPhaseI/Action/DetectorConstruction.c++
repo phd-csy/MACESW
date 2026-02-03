@@ -69,8 +69,8 @@ auto DetectorConstruction::Construct() -> G4VPhysicalVolume* {
     auto& ecalCrystal{fWorld->NewDaughter<ECALCrystal>(fCheckOverlap)};
     auto& ecalPhotoSensor{fWorld->NewDaughter<ECALPhotoSensor>(fCheckOverlap)};
     auto& centralBeamPipe{fWorld->NewDaughter<PhaseI::CentralBeamPipe>(fCheckOverlap)};
-    auto& sciFiTracker{fWorld->NewDaughter<PhaseI::SciFiTracker>(fCheckOverlap)};
-    auto& ttc{fWorld->NewDaughter<PhaseI::TTC>(fCheckOverlap)};
+    // auto& sciFiTracker{fWorld->NewDaughter<PhaseI::SciFiTracker>(fCheckOverlap)};
+    // auto& ttc{fWorld->NewDaughter<PhaseI::TTC>(fCheckOverlap)};
 
     centralBeamPipe.NewDaughter<PhaseI::Target>(fCheckOverlap);
 
@@ -83,16 +83,16 @@ auto DetectorConstruction::Construct() -> G4VPhysicalVolume* {
     const auto ecalSD(new SD::ECALSD{ecalName, fECALPMSD});
     ecalCrystal.RegisterSD(ecalSD);
 
-    const auto fSciFiSD{new SD::SciFiSD{scifiName}};
-    sciFiTracker.RegisterSD(scifiName + "HelicalFiberCore", fSciFiSD);
-    sciFiTracker.RegisterSD(scifiName + "TransverseFiberCore", fSciFiSD);
+    // const auto fSciFiSD{new SD::SciFiSD{scifiName}};
+    // sciFiTracker.RegisterSD(scifiName + "HelicalFiberCore", fSciFiSD);
+    // sciFiTracker.RegisterSD(scifiName + "TransverseFiberCore", fSciFiSD);
 
-    const auto sciFiSiPMSD{new SD::SciFiSiPMSD{scifiName + "SiPM"}};
-    sciFiTracker.RegisterSD(scifiName + "SiPM", sciFiSiPMSD);
+    // const auto sciFiSiPMSD{new SD::SciFiSiPMSD{scifiName + "SiPM"}};
+    // sciFiTracker.RegisterSD(scifiName + "SiPM", sciFiSiPMSD);
 
-    const auto ttcSiPM(new SD::TTCSiPMSD{MACE::PhaseI::Detector::Description::TTC::Instance().Name() + "SiPM", TTCSiPMSD::Type::MACEPhaseI});
-    ttc.RegisterSD("TTCScintillator", new SD::TTCSD{MACE::PhaseI::Detector::Description::TTC::Instance().Name(), TTCSD::Type::MACEPhaseI, ttcSiPM});
-    ttc.RegisterSD("TTCSilicone", ttcSiPM);
+    // const auto ttcSiPM(new SD::TTCSiPMSD{MACE::PhaseI::Detector::Description::TTC::Instance().Name() + "SiPM", TTCSiPMSD::Type::MACEPhaseI});
+    // ttc.RegisterSD("TTCScintillator", new SD::TTCSD{MACE::PhaseI::Detector::Description::TTC::Instance().Name(), TTCSD::Type::MACEPhaseI, ttcSiPM});
+    // ttc.RegisterSD("TTCSilicone", ttcSiPM);
 
     return fWorld->PhysicalVolume();
 }

@@ -21,6 +21,7 @@
 #include "MACE/Detector/Description/ECAL.h++"
 #include "MACE/PhaseI/Detector/Description/UsePhaseIDefault.h++"
 #include "MACE/PhaseI/ReconECAL/ReconECAL.h++"
+#include "MACE/Reconstruction/ECALClustering/Clusterer.h++"
 
 #include "Mustard/CLI/BasicCLI.h++"
 #include "Mustard/Data/Output.h++"
@@ -42,6 +43,7 @@
 #include "TH3.h"
 #include "TRandom.h"
 #include "TTree.h"
+#include "TVector3.h"
 
 #include "muc/algorithm"
 
@@ -137,7 +139,7 @@ auto ReconECAL::Main(int argc, char* argv[]) const -> int {
                 CLHEP::Hep3Vector firstClusterCentroid{};
                 auto firstSeedModule = potentialSeedModule.begin();
 
-                const auto Clustering = [&](std::unordered_set<int>& set,
+                const auto clustering = [&](std::unordered_set<int>& set,
                                             CLHEP::Hep3Vector& c,
                                             std::vector<int>::iterator seedIt) {
                     const auto addClusterLayers = [&](int module) {
@@ -175,7 +177,7 @@ auto ReconECAL::Main(int argc, char* argv[]) const -> int {
                     return std::make_pair(totalEnergy, totalPE);
                 };
 
-                auto firstClusterSignal = Clustering(firstCluster, firstClusterCentroid, firstSeedModule);
+                auto firstClusterSignal = clustering(firstCluster, firstClusterCentroid, firstSeedModule);
 
                 Mustard::Data::Tuple<ECALEnergy> energyTuple;
                 Get<"Edep">(energyTuple) = firstClusterSignal.first;
@@ -248,7 +250,7 @@ auto ReconECAL::Main(int argc, char* argv[]) const -> int {
                     return;
                 }
 
-                const auto Clustering = [&](std::unordered_set<int>& set,
+                const auto clustering = [&](std::unordered_set<int>& set,
                                             CLHEP::Hep3Vector& c,
                                             std::vector<int>::iterator seedIt) -> double {
                     const auto addClusterLayers = [&](int module) {
@@ -282,8 +284,8 @@ auto ReconECAL::Main(int argc, char* argv[]) const -> int {
                     return totalEnergy;
                 };
 
-                auto firstClusterSignal = Clustering(firstCluster, firstClusterCentroid, firstSeedModule);
-                auto secondClusterSignal = Clustering(secondCluster, secondClusterCentroid, secondSeedModule);
+                auto firstClusterSignal = clustering(firstCluster, firstClusterCentroid, firstSeedModule);
+                auto secondClusterSignal = clustering(secondCluster, secondClusterCentroid, secondSeedModule);
 
                 Mustard::Data::Tuple<ECALEnergy> energyTuple;
                 // total signal
@@ -346,7 +348,7 @@ auto ReconECAL::Main(int argc, char* argv[]) const -> int {
                 CLHEP::Hep3Vector clusterCentroid{};
                 auto seedModule = potentialSeedModule.begin();
 
-                const auto Clustering = [&](std::unordered_set<int>& set,
+                const auto clustering = [&](std::unordered_set<int>& set,
                                             CLHEP::Hep3Vector& c,
                                             std::vector<int>::iterator seedIt) -> double {
                     const auto addClusterLayers = [&](int module) {
@@ -379,7 +381,7 @@ auto ReconECAL::Main(int argc, char* argv[]) const -> int {
                     return totalEnergy;
                 };
 
-                auto clusterSignal = Clustering(cluster, clusterCentroid, seedModule);
+                auto clusterSignal = clustering(cluster, clusterCentroid, seedModule);
 
                 Mustard::Data::Tuple<ECALEnergy> energyTuple;
                 // total signal

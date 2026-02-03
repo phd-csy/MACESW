@@ -50,8 +50,10 @@ auto UsePhaseIDefault() -> void {
         auto& ecal{MACE::ECAL::Instance()};
         ecal.InnerRadius(260_mm);
         ecal.CrystalHypotenuse(280_mm);
-        ecal.UpstreamWindowRadius(104_mm);
-        ecal.DownstreamWindowRadius(104_mm);
+        // ecal.UpstreamWindowRadius(104_mm);
+        // ecal.DownstreamWindowRadius(104_mm);
+        ecal.UpstreamWindowRadius(50_mm);
+        ecal.DownstreamWindowRadius(50_mm);
         ecal.ScintillationEnergyBin({3.300891_eV, 3.394291_eV, 3.459551_eV, 3.515883_eV, 3.557591_eV, 3.591915_eV,
                                      3.622042_eV, 3.644458_eV, 3.678815_eV, 3.690132_eV, 3.715531_eV, 3.728362_eV,
                                      3.747776_eV, 3.768708_eV, 3.787216_eV, 3.80725_eV, 3.820723_eV, 3.847958_eV,
