@@ -186,7 +186,7 @@ ECAL::ECAL() :
     fUpstreamWindowRadius{this, 50_mm},
     fDownstreamWindowRadius{this, 5_mm},
     fArray{this, [this] { return CalculateArrayInformation(); }},
-    fModuleSelection{this, {0}},
+    fModuleSelection{this, {}},
     // crystal param.s
     fScintillationEnergyBin{this, {}},
     fScintillationComponent1{this, {}},
