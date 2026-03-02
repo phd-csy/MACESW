@@ -114,10 +114,9 @@ auto ECALCrystal::Construct(G4bool checkOverlaps) -> void {
         }
         if (not moduleSelection.empty() and
             moduleID == moduleSelection.front() and Mustard::Env::VerboseLevelReach<'I'>()) {
-            Mustard::MasterPrint("\n===========================");
-            Mustard::MasterPrint("Centroid of Selected Seed Module:");
-            Mustard::MasterPrint("{} {} {}", centroid.x(), centroid.y(), centroid.z());
-            Mustard::MasterPrint("===========================\n");
+            Mustard::MasterPrintLn("Centroid of Selected Seed Module: ");
+            Mustard::MasterPrintLn("{} {} {}", centroid.x(), centroid.y(), centroid.z());
+            Mustard::MasterPrintLn<'I'>("======================================================\n");
         }
 
         const auto solidCrystal{
@@ -138,8 +137,8 @@ auto ECALCrystal::Construct(G4bool checkOverlaps) -> void {
                                        [&](const auto& aVertex) { return outerCentroid + (aVertex - outerCentroid).unit() * ((aVertex - outerCentroid).mag() - ecal.CrystalPackageThickness()); });
                 // inner face scaled from outer face
                 const auto innerCentroid{innerRadius * centroid};
-                if (Mustard::Env::VerboseLevelReach<'V'>()) {
-                    Mustard::MasterPrintLn("{}\t{}\t{}\t{}", moduleID, innerCentroid.x(), innerCentroid.y(), innerCentroid.z());
+                if (Mustard::Env::VerboseLevelReach<'I'>()) {
+                    Mustard::MasterPrintLn("Module {}\t{}\t{}\t{}", moduleID, innerCentroid.x(), innerCentroid.y(), innerCentroid.z());
                 }
                 const auto innerVertexScaleFactor{innerRadius / outerRadius};
                 std::vector<G4ThreeVector> innerVertexes(vertexIndex.size());
