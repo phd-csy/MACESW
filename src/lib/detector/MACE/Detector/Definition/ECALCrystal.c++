@@ -138,7 +138,7 @@ auto ECALCrystal::Construct(G4bool checkOverlaps) -> void {
                 // inner face scaled from outer face
                 const auto innerCentroid{innerRadius * centroid};
                 if (Mustard::Env::VerboseLevelReach<'I'>()) {
-                    Mustard::MasterPrintLn("Module {}\t{}\t{}\t{}", moduleID, innerCentroid.x(), innerCentroid.y(), innerCentroid.z());
+                    Mustard::MasterPrintLn("Module {} {} {} {}", moduleID, innerCentroid.x(), innerCentroid.y(), innerCentroid.z());
                 }
                 const auto innerVertexScaleFactor{innerRadius / outerRadius};
                 std::vector<G4ThreeVector> innerVertexes(vertexIndex.size());

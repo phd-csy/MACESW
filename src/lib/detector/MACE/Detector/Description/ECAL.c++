@@ -427,13 +427,22 @@ auto ECAL::CalculateArrayInformation() const -> ArrayInformation {
         it = range.second;
     }
     if (not fModuleSelection->empty()) {
+        std::unordered_set<int> neighborModuleSet;
         Mustard::MasterPrintLn<'I'>("### Selected Module Clustering ");
         for (auto&& m : *fModuleSelection) {
+            neighborModuleSet.insert(m);
             Mustard::MasterPrintLn<'I'>("\n- Module {}", m);
             Mustard::MasterPrint<'I'>("{},", m);
             for (auto&& n : moduleList.at(m).neighborModuleID) {
+                neighborModuleSet.insert(n);
+                neighborModuleSet.insert(moduleList.at(n).neighborModuleID.begin(), moduleList.at(n).neighborModuleID.end());
                 Mustard::MasterPrint<'I'>("{},", n);
             }
+        }
+        Mustard::MasterPrint<'I'>("\n");
+        Mustard::MasterPrint<'I'>("\n- Summary: ");
+        for (auto&& m : neighborModuleSet) {
+            Mustard::MasterPrint<'I'>("{},", m);
         }
     }
     Mustard::MasterPrintLn<'I'>("\n======================================================");
