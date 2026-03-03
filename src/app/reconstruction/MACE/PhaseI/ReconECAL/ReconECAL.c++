@@ -85,41 +85,46 @@ auto ReconECAL::Main(int argc, char* argv[]) const -> int {
     const auto& ecal{MACE::Detector::Description::ECAL::Instance()};
     const auto& moduleList{ecal.Array().moduleList};
 
-    TFile outputFile{Mustard::Parallel::ProcessSpecificPath(cli->get("--output").c_str()).generic_string().c_str(), cli->get("--output-mode").c_str()};
-
     using ECALEnergy = Mustard::Data::TupleModel<
         Mustard::Data::Value<double, "Edep1", "Energy deposition of the 1st cluster">,
         Mustard::Data::Value<double, "Edep2", "Energy deposition of the 2nd cluster">,
         Mustard::Data::Value<double, "Edep3", "Energy deposition of the 3rd cluster">,
-        Mustard::Data::Value<double, "TotalEdep", "Energy deposition in total">,
         Mustard::Data::Value<int, "PE1", "Photoelectron counts of the 1st cluster">,
         Mustard::Data::Value<int, "PE2", "Photoelectron counts of the 2nd cluster">,
         Mustard::Data::Value<int, "PE3", "Photoelectron counts of the 3rd cluster">,
-        Mustard::Data::Value<int, "TotalPE", "Photoelectron counts in total">,
         // Mustard::Data::Value<double, "t", "Time of the track">,
-        Mustard::Data::Value<double, "dE", "Energy difference of the tracks">,
-        Mustard::Data::Value<double, "dt", "Time difference of the tracks">,
         Mustard::Data::Value<muc::array3f, "Position1", "Position of the 1st cluster">,
         Mustard::Data::Value<muc::array3f, "Position2", "Position of the 2nd cluster">,
         Mustard::Data::Value<muc::array3f, "Position3", "Position of the 3rd cluster">,
+        Mustard::Data::Value<double, "TotalEdep", "Energy deposition in total">,
+        Mustard::Data::Value<int, "TotalPE", "Photoelectron counts in total">,
+        Mustard::Data::Value<double, "dE", "Energy difference of the tracks">,
+        Mustard::Data::Value<double, "dt", "Time difference of the tracks">,
         Mustard::Data::Value<double, "cosTheta", "Cosine of angle between the tracks">,
         Mustard::Data::Value<double, "theta", "Angle between the tracks">>;
 
-    double energy1{};
-    double energy2{};
-    // double energy3{};
-    int pe1{};
-    // int pe2{};
-    // int pe3{};
-    CLHEP::Hep3Vector weightedPosition1{};
-    CLHEP::Hep3Vector weightedPosition2{};
-    // CLHEP::Hep3Vector weightedPosition3{};
-    CLHEP::Hep3Vector clusterPosition1{};
-    CLHEP::Hep3Vector clusterPosition2{};
-    // CLHEP::Hep3Vector clusterPosition3{};
     Mustard::Data::Tuple<ECALEnergy> energyTuple;
 
-    auto setEnergyTupel1 = [&](std::vector<int>& potentialSeedModule, std::unordered_map<int, std::shared_ptr<Mustard::Data::Tuple<Data::ECALSimHit>>>& hitDict, CLHEP::Hep3Vector& truthHitVector) -> void {
+    muc::array3f truthHitMomentum{};
+    CLHEP::Hep3Vector truthHitVector{};
+    if (useCalibration) {
+        std::unique_ptr<TFile> dataFile{TFile::Open(cli->get<std::vector<std::string>>("input").front().c_str())};
+        auto dataTree = dataFile->Get<TTree>("G4Run0/SimPrimaryVertex");
+        dataTree->SetBranchAddress("p0", &truthHitMomentum);
+        dataTree->GetEntry(0);
+        truthHitVector.set(
+            truthHitMomentum.at(0),
+            truthHitMomentum.at(1),
+            truthHitMomentum.at(2));
+        dataFile->Close();
+    }
+
+    auto setEnergyTuple1 = [&](std::vector<int>& potentialSeedModule, std::unordered_map<int, std::shared_ptr<Mustard::Data::Tuple<Data::ECALSimHit>>>& hitDict) -> void {
+        double energy1{};
+        int pe1{};
+        CLHEP::Hep3Vector weightedPosition1{};
+        CLHEP::Hep3Vector clusterPosition1{};
+
         auto seedModule = potentialSeedModule.begin();
         auto cluster = ECALClustering::Clusterer(*seedModule, moduleList);
         for (const auto& module : cluster) {
@@ -144,13 +149,22 @@ auto ReconECAL::Main(int argc, char* argv[]) const -> int {
         Get<"Edep1">(energyTuple) = energy1;
         Get<"PE1">(energyTuple) = pe1;
         Get<"Position1">(energyTuple) = clusterPosition1;
+        Get<"TotalEdep">(energyTuple) = energy1;
+        Get<"TotalPE">(energyTuple) = pe1;
         if (useCalibration) {
             Get<"cosTheta">(energyTuple) = clusterPosition1.cosTheta(truthHitVector);
         }
         Get<"theta">(energyTuple) = clusterPosition1.theta(CLHEP::Hep3Vector{0, 0, 1});
     };
 
-    auto setEnergyTupel2 = [&](std::vector<int>& potentialSeedModule, std::unordered_map<int, std::shared_ptr<Mustard::Data::Tuple<Data::ECALSimHit>>>& hitDict) -> void {
+    auto setEnergyTuple2 = [&](std::vector<int>& potentialSeedModule, std::unordered_map<int, std::shared_ptr<Mustard::Data::Tuple<Data::ECALSimHit>>>& hitDict) -> void {
+        double energy1{};
+        double energy2{};
+        CLHEP::Hep3Vector weightedPosition1{};
+        CLHEP::Hep3Vector weightedPosition2{};
+        CLHEP::Hep3Vector clusterPosition1{};
+        CLHEP::Hep3Vector clusterPosition2{};
+
         auto firstSeedModule = potentialSeedModule.begin();
         auto secondSeedModule = std::ranges::find_if(
             potentialSeedModule,
@@ -191,8 +205,8 @@ auto ReconECAL::Main(int argc, char* argv[]) const -> int {
         }
 
         Get<"Edep1">(energyTuple) = energy1;
-        Get<"Position1">(energyTuple) = clusterPosition1;
         Get<"Edep2">(energyTuple) = energy2;
+        Get<"Position1">(energyTuple) = clusterPosition1;
         Get<"Position2">(energyTuple) = clusterPosition2;
         Get<"TotalEdep">(energyTuple) = energy1 + energy2;
         Get<"dE">(energyTuple) = std::abs(energy1 - energy2);
@@ -200,6 +214,7 @@ auto ReconECAL::Main(int argc, char* argv[]) const -> int {
         Get<"cosTheta">(energyTuple) = clusterPosition1.cosTheta(clusterPosition2);
     };
 
+    TFile outputFile{Mustard::Parallel::ProcessSpecificPath(cli->get("--output").c_str()).generic_string().c_str(), cli->get("--output-mode").c_str()};
     Mustard::Data::Output<ECALEnergy> reconEnergy{"G4Run0/ReconECAL"};
     Mustard::Data::Processor processor;
 
@@ -213,26 +228,19 @@ auto ReconECAL::Main(int argc, char* argv[]) const -> int {
                          [](auto&& hit1, auto&& hit2) {
                              return Get<"Edep">(*hit1) > Get<"Edep">(*hit2);
                          });
+
             std::unordered_map<int, std::shared_ptr<Mustard::Data::Tuple<Data::ECALSimHit>>> hitDict;
             std::vector<int> potentialSeedModule;
 
-            muc::array3f truthHitMomentum{};
             for (auto&& hit : event) {
                 hitDict.try_emplace(Get<"ModID">(*hit), hit);
                 potentialSeedModule.emplace_back(Get<"ModID">(*hit));
-                if (Get<"TrkID">(*hit) == 1 and Get<"HitID">(*hit) == 0) {
-                    truthHitMomentum = Get<"p0">(*hit);
-                }
             }
-            CLHEP::Hep3Vector truthHitVector{
-                truthHitMomentum.at(0),
-                truthHitMomentum.at(1),
-                truthHitMomentum.at(2)};
 
             if (doSingle) {
-                setEnergyTupel1(potentialSeedModule, hitDict, truthHitVector);
+                setEnergyTuple1(potentialSeedModule, hitDict);
             } else if (doDouble) {
-                setEnergyTupel2(potentialSeedModule, hitDict);
+                setEnergyTuple2(potentialSeedModule, hitDict);
             } else if (doTriple) {
                 // To be implemented
             }
