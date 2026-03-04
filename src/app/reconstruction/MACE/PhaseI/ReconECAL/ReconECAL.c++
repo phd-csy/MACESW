@@ -29,6 +29,7 @@
 #include "Mustard/Data/Tuple.h++"
 #include "Mustard/Detector/Description/DescriptionIO.h++"
 #include "Mustard/Env/MPIEnv.h++"
+#include "Mustard/IO/PrettyLog.h++"
 #include "Mustard/Parallel/ProcessSpecificPath.h++"
 #include "Mustard/Utility/LiteralUnit.h++"
 #include "Mustard/Utility/MathConstant.h++"
@@ -62,15 +63,11 @@ auto ReconECAL::Main(int argc, char* argv[]) const -> int {
     cli->add_argument("-single", "--track-single").help("Reconstruction of single event.").flag();
     cli->add_argument("-double", "--track-double").help("Reconstruction of double events.").flag();
     cli->add_argument("-triple", "--track-triple").help("Reconstruction of triple events.").flag();
-    cli->add_argument("-optics", "--optics").help("Use optical response.").flag();
-    cli->add_argument("-cali", "--calibration").help("Use calibration configurations.").flag();
     Mustard::Env::MPIEnv env{argc, argv, cli};
 
     const auto doSingle{cli["--track-single"] == true};
     const auto doDouble{cli["--track-double"] == true};
     const auto doTriple{cli["--track-triple"] == true};
-    const auto useOptics{cli["--optics"] == true};
-    const auto useCalibration{cli["--calibration"] == true};
     std::vector<bool> reconstructionConfig{doSingle, doDouble, doTriple};
 
     if (std::ranges::count(reconstructionConfig, true) != 1) {
@@ -89,15 +86,11 @@ auto ReconECAL::Main(int argc, char* argv[]) const -> int {
         Mustard::Data::Value<double, "Edep1", "Energy deposition of the 1st cluster">,
         Mustard::Data::Value<double, "Edep2", "Energy deposition of the 2nd cluster">,
         Mustard::Data::Value<double, "Edep3", "Energy deposition of the 3rd cluster">,
-        Mustard::Data::Value<int, "PE1", "Photoelectron counts of the 1st cluster">,
-        Mustard::Data::Value<int, "PE2", "Photoelectron counts of the 2nd cluster">,
-        Mustard::Data::Value<int, "PE3", "Photoelectron counts of the 3rd cluster">,
         // Mustard::Data::Value<double, "t", "Time of the track">,
         Mustard::Data::Value<muc::array3f, "Position1", "Position of the 1st cluster">,
         Mustard::Data::Value<muc::array3f, "Position2", "Position of the 2nd cluster">,
         Mustard::Data::Value<muc::array3f, "Position3", "Position of the 3rd cluster">,
         Mustard::Data::Value<double, "TotalEdep", "Energy deposition in total">,
-        Mustard::Data::Value<int, "TotalPE", "Photoelectron counts in total">,
         Mustard::Data::Value<double, "dE", "Energy difference of the tracks">,
         Mustard::Data::Value<double, "dt", "Time difference of the tracks">,
         Mustard::Data::Value<double, "cosTheta", "Cosine of angle between the tracks">,
@@ -105,23 +98,8 @@ auto ReconECAL::Main(int argc, char* argv[]) const -> int {
 
     Mustard::Data::Tuple<ECALEnergy> energyTuple;
 
-    muc::array3f truthHitMomentum{};
-    CLHEP::Hep3Vector truthHitVector{};
-    if (useCalibration) {
-        std::unique_ptr<TFile> dataFile{TFile::Open(cli->get<std::vector<std::string>>("input").front().c_str())};
-        auto dataTree = dataFile->Get<TTree>("G4Run0/SimPrimaryVertex");
-        dataTree->SetBranchAddress("p0", &truthHitMomentum);
-        dataTree->GetEntry(0);
-        truthHitVector.set(
-            truthHitMomentum.at(0),
-            truthHitMomentum.at(1),
-            truthHitMomentum.at(2));
-        dataFile->Close();
-    }
-
     auto setEnergyTuple1 = [&](std::vector<int>& potentialSeedModule, std::unordered_map<int, std::shared_ptr<Mustard::Data::Tuple<Data::ECALSimHit>>>& hitDict) -> void {
         double energy1{};
-        int pe1{};
         CLHEP::Hep3Vector weightedPosition1{};
         CLHEP::Hep3Vector clusterPosition1{};
 
@@ -135,11 +113,6 @@ auto ReconECAL::Main(int argc, char* argv[]) const -> int {
             auto energy = Get<"Edep">(*hitIt->second);
             weightedPosition1 += energy * moduleList.at(module).centroid;
             energy1 += energy;
-
-            auto pe = Get<"nOptPho">(*hitIt->second);
-            if (useOptics and pe > 3) {
-                pe1 += pe;
-            }
         }
 
         if (energy1 != 0) {
@@ -147,13 +120,8 @@ auto ReconECAL::Main(int argc, char* argv[]) const -> int {
         }
 
         Get<"Edep1">(energyTuple) = energy1;
-        Get<"PE1">(energyTuple) = pe1;
         Get<"Position1">(energyTuple) = clusterPosition1;
         Get<"TotalEdep">(energyTuple) = energy1;
-        Get<"TotalPE">(energyTuple) = pe1;
-        if (useCalibration) {
-            Get<"cosTheta">(energyTuple) = clusterPosition1.cosTheta(truthHitVector);
-        }
         Get<"theta">(energyTuple) = clusterPosition1.theta(CLHEP::Hep3Vector{0, 0, 1});
     };
 

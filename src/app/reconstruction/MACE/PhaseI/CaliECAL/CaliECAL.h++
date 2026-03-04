@@ -19,21 +19,14 @@
 
 #pragma once
 
-#include "MACE/Data/SimHit.h++"
-#include "MACE/Detector/Description/ECAL.h++"
+#include "Mustard/Application/Subprogram.h++"
 
-#include "Mustard/Data/Tuple.h++"
+namespace MACE::PhaseI::CaliECAL {
 
-#include "CLHEP/Vector/ThreeVector.h"
+class CaliECAL : public Mustard::Application::Subprogram {
+public:
+    CaliECAL();
+    auto Main(int argc, char* argv[]) const -> int override;
+};
 
-#include <unordered_map>
-#include <unordered_set>
-
-namespace MACE::inline Reconstruction::ECALClustering {
-
-inline auto Clusterer(int seedID,
-                      const std::vector<MACE::Detector::Description::ECAL::ArrayInformation::Module>& moduleList) -> std::unordered_set<int>;
-
-} // namespace MACE::inline Reconstruction::ECALClustering
-
-#include "MACE/Reconstruction/ECALClustering/Clusterer.inl"
+} // namespace MACE::PhaseI::CaliECAL
