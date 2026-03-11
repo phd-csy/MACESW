@@ -103,9 +103,9 @@ auto CaliECAL::Main(int argc, char* argv[]) const -> int {
             weightedPosition += e * moduleList.at(module).centroid;
             energy += e;
 
-            auto pe = Get<"nOptPho">(*hitIt->second);
-            if (cli["--optics"] == true and pe > 3) {
-                pe += pe;
+            auto hitPE = Get<"nOptPho">(*hitIt->second);
+            if (cli["--optics"] == true and hitPE > 3) {
+                pe += hitPE;
             }
         }
 
@@ -117,6 +117,7 @@ auto CaliECAL::Main(int argc, char* argv[]) const -> int {
         Get<"PE">(energyTuple) = pe;
         Get<"Position">(energyTuple) = clusterPosition;
         Get<"cosTheta">(energyTuple) = clusterPosition.cosTheta(truthHitMomentum);
+        Get<"theta">(energyTuple) = clusterPosition.theta(truthHitMomentum);
     };
 
     auto primaryData = ROOT::RDataFrame{"G4Run0/SimPrimaryVertex", cli->get<std::vector<std::string>>("input")};
