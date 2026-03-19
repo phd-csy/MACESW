@@ -90,58 +90,58 @@ auto SciFiTracker::Construct(G4bool checkOverlaps) -> void {
     // Construct Material Optical Properties Tables
     //////////////////////////////////////////////////
 
-    constexpr auto fLambdaMin = 200_nm;
-    constexpr auto fLambdaMax = 700_nm;
-    std::vector<G4double> fEnergyPair{h_Planck * c_light / fLambdaMax,
-                                      h_Planck * c_light / fLambdaMin};
+    // constexpr auto fLambdaMin = 200_nm;
+    // constexpr auto fLambdaMax = 700_nm;
+    // std::vector<G4double> fEnergyPair{h_Planck * c_light / fLambdaMax,
+    //                                   h_Planck * c_light / fLambdaMin};
 
-    std::vector<G4double> scintillationEnergyBin(sciFiTracker.ScintillationWaveLengthBin().size());
-    std::ranges::transform(sciFiTracker.ScintillationWaveLengthBin(),
-                           scintillationEnergyBin.begin(),
-                           [](auto val) { return h_Planck * c_light / (val * 1_nm); });
-    std::vector<G4double> scintillationComponent(sciFiTracker.ScintillationComponent1().size());
-    for (int i{}; i < std::ssize(sciFiTracker.ScintillationComponent1()); i++) {
-        scintillationComponent[i] = sciFiTracker.ScintillationComponent1()[i] * h_Planck * c_light / scintillationEnergyBin[i] / scintillationEnergyBin[i];
-    }
+    // std::vector<G4double> scintillationEnergyBin(sciFiTracker.ScintillationWaveLengthBin().size());
+    // std::ranges::transform(sciFiTracker.ScintillationWaveLengthBin(),
+    //                        scintillationEnergyBin.begin(),
+    //                        [](auto val) { return h_Planck * c_light / (val * 1_nm); });
+    // std::vector<G4double> scintillationComponent(sciFiTracker.ScintillationComponent1().size());
+    // for (int i{}; i < std::ssize(sciFiTracker.ScintillationComponent1()); i++) {
+    //     scintillationComponent[i] = sciFiTracker.ScintillationComponent1()[i] * h_Planck * c_light / scintillationEnergyBin[i] / scintillationEnergyBin[i];
+    // }
 
     //============================================ Optical Window =====================================
 
-    const auto siliconeOilPropertiesTable{new G4MaterialPropertiesTable()};
-    siliconeOilPropertiesTable->AddProperty("RINDEX", fEnergyPair, {1.465, 1.465});
-    siliconeOilPropertiesTable->AddProperty("ABSLENGTH", fEnergyPair, {40_cm, 40_cm});
-    siliconeOil->SetMaterialPropertiesTable(siliconeOilPropertiesTable);
+    // const auto siliconeOilPropertiesTable{new G4MaterialPropertiesTable()};
+    // siliconeOilPropertiesTable->AddProperty("RINDEX", fEnergyPair, {1.465, 1.465});
+    // siliconeOilPropertiesTable->AddProperty("ABSLENGTH", fEnergyPair, {40_cm, 40_cm});
+    // siliconeOil->SetMaterialPropertiesTable(siliconeOilPropertiesTable);
 
-    const auto epoxyPropertiesTable{new G4MaterialPropertiesTable()};
-    epoxyPropertiesTable->AddProperty("RINDEX", fEnergyPair, {1.55, 1.55});
-    epoxy->SetMaterialPropertiesTable(epoxyPropertiesTable);
+    // const auto epoxyPropertiesTable{new G4MaterialPropertiesTable()};
+    // epoxyPropertiesTable->AddProperty("RINDEX", fEnergyPair, {1.55, 1.55});
+    // epoxy->SetMaterialPropertiesTable(epoxyPropertiesTable);
 
-    const auto plasticPropertiesTable = new G4MaterialPropertiesTable();
-    plasticPropertiesTable->AddProperty("RINDEX", fEnergyPair, {1.59, 1.59});
-    plasticPropertiesTable->AddProperty("ABSLENGTH", fEnergyPair, {4_m, 4_m});
-    plasticPropertiesTable->AddProperty("SCINTILLATIONCOMPONENT1", scintillationEnergyBin, scintillationComponent);
-    plasticPropertiesTable->AddConstProperty("SCINTILLATIONYIELD", 8000);
-    plasticPropertiesTable->AddConstProperty("SCINTILLATIONTIMECONSTANT1", sciFiTracker.ScintillationTimeConstant1());
-    plasticPropertiesTable->AddConstProperty("RESOLUTIONSCALE", 1.0);
-    ps->SetMaterialPropertiesTable(plasticPropertiesTable);
+    // const auto plasticPropertiesTable = new G4MaterialPropertiesTable();
+    // plasticPropertiesTable->AddProperty("RINDEX", fEnergyPair, {1.59, 1.59});
+    // plasticPropertiesTable->AddProperty("ABSLENGTH", fEnergyPair, {4_m, 4_m});
+    // plasticPropertiesTable->AddProperty("SCINTILLATIONCOMPONENT1", scintillationEnergyBin, scintillationComponent);
+    // plasticPropertiesTable->AddConstProperty("SCINTILLATIONYIELD", 8000);
+    // plasticPropertiesTable->AddConstProperty("SCINTILLATIONTIMECONSTANT1", sciFiTracker.ScintillationTimeConstant1());
+    // plasticPropertiesTable->AddConstProperty("RESOLUTIONSCALE", 1.0);
+    // ps->SetMaterialPropertiesTable(plasticPropertiesTable);
 
-    const auto pmmaPropertiesTable{new G4MaterialPropertiesTable()};
-    pmmaPropertiesTable->AddProperty("RINDEX", fEnergyPair, {1.49, 1.49});
-    pmmaPropertiesTable->AddProperty("ABSLENGTH", fEnergyPair, {4_m, 4_m});
-    pmma->SetMaterialPropertiesTable(pmmaPropertiesTable);
+    // const auto pmmaPropertiesTable{new G4MaterialPropertiesTable()};
+    // pmmaPropertiesTable->AddProperty("RINDEX", fEnergyPair, {1.49, 1.49});
+    // pmmaPropertiesTable->AddProperty("ABSLENGTH", fEnergyPair, {4_m, 4_m});
+    // pmma->SetMaterialPropertiesTable(pmmaPropertiesTable);
 
-    const auto fpPropertiesTable{new G4MaterialPropertiesTable()};
-    fpPropertiesTable->AddProperty("RINDEX", fEnergyPair, {1.363, 1.363});
-    fpPropertiesTable->AddProperty("ABSLENGTH", fEnergyPair, {4_m, 4_m});
-    fp->SetMaterialPropertiesTable(fpPropertiesTable);
+    // const auto fpPropertiesTable{new G4MaterialPropertiesTable()};
+    // fpPropertiesTable->AddProperty("RINDEX", fEnergyPair, {1.363, 1.363});
+    // fpPropertiesTable->AddProperty("ABSLENGTH", fEnergyPair, {4_m, 4_m});
+    // fp->SetMaterialPropertiesTable(fpPropertiesTable);
 
     //============================================ Surface ============================================
 
-    const auto sipmSurfacePropertiesTable{new G4MaterialPropertiesTable()};
-    sipmSurfacePropertiesTable->AddProperty("REFLECTIVITY", fEnergyPair, {0., 0.});
-    sipmSurfacePropertiesTable->AddProperty("EFFICIENCY", sciFiTracker.SiPMEnergyBin(), sciFiTracker.SiPMQuantumEfficiency());
+    // const auto sipmSurfacePropertiesTable{new G4MaterialPropertiesTable()};
+    // sipmSurfacePropertiesTable->AddProperty("REFLECTIVITY", fEnergyPair, {0., 0.});
+    // sipmSurfacePropertiesTable->AddProperty("EFFICIENCY", sciFiTracker.SiPMEnergyBin(), sciFiTracker.SiPMQuantumEfficiency());
 
-    const auto absorbSurfacePropertiesTable{new G4MaterialPropertiesTable};
-    absorbSurfacePropertiesTable->AddProperty("REFLECTIVITY", fEnergyPair, {0, 0});
+    // const auto absorbSurfacePropertiesTable{new G4MaterialPropertiesTable};
+    // absorbSurfacePropertiesTable->AddProperty("REFLECTIVITY", fEnergyPair, {0, 0});
 
     /////////////////////////////////////////////
     // Construct Volumes
@@ -158,7 +158,7 @@ auto SciFiTracker::Construct(G4bool checkOverlaps) -> void {
                                          2_pi)};
     const auto logicalBracket{
         Make<G4LogicalVolume>(solidBracket,
-                              G4NistManager::Instance()->FindOrBuildMaterial("G4_PLASTIC_SC_VINYLTOLUENE"), // G4_PLASTIC_SC_VINYLTOLUENE or G4_Air
+                              G4NistManager::Instance()->FindOrBuildMaterial("G4_AIR"), // G4_PLASTIC_SC_VINYLTOLUENE or G4_Air
                               scifiName + "Bracket")};
     Make<G4PVPlacement>(G4Transform3D{},
                         logicalBracket,
@@ -477,7 +477,7 @@ auto SciFiTracker::Construct(G4bool checkOverlaps) -> void {
                                                     0,
                                                     (sciFiTracker.SiPMThickness() + sciFiTracker.SiliconeOilThickness() +
                                                      sciFiTracker.EpoxyThickness() + // clang-format off
-                                                     sciFiTracker.FiberLength()) / 2 + 
+                                                     sciFiTracker.FiberLength()) / 2 +
                                                      sciFiTracker.TransverseLightGuideLength())}, // clang-format on
                     logicalSiPM,
                     fmt::format("{}SiPM_{}", scifiName, sipmID),
@@ -495,7 +495,7 @@ auto SciFiTracker::Construct(G4bool checkOverlaps) -> void {
                                           -(sciFiTracker.SiPMThickness() +
                                             sciFiTracker.SiliconeOilThickness() +
                                             sciFiTracker.EpoxyThickness() + // clang-format off
-                                            sciFiTracker.FiberLength()) / 2 - 
+                                            sciFiTracker.FiberLength()) / 2 -
                                             sciFiTracker.TransverseLightGuideLength())}, // clang-format on
                     logicalAbsorbLayer,
                     scifiName + "AbsorbLayer",
@@ -566,13 +566,13 @@ auto SciFiTracker::Construct(G4bool checkOverlaps) -> void {
     // Construct Optical Surface
     /////////////////////////////////////////////
 
-    const auto sipmSurface{new G4OpticalSurface("SiPMSurface", unified, polished, dielectric_metal)};
-    sipmSurface->SetMaterialPropertiesTable(sipmSurfacePropertiesTable);
-    new G4LogicalSkinSurface{"SiPMSurface", logicalSiPM, sipmSurface};
+    // const auto sipmSurface{new G4OpticalSurface("SiPMSurface", unified, polished, dielectric_metal)};
+    // sipmSurface->SetMaterialPropertiesTable(sipmSurfacePropertiesTable);
+    // new G4LogicalSkinSurface{"SiPMSurface", logicalSiPM, sipmSurface};
 
-    const auto absorbSurface{new G4OpticalSurface("AbsorbSurface", unified, polished, dielectric_metal)};
-    absorbSurface->SetMaterialPropertiesTable(absorbSurfacePropertiesTable);
-    new G4LogicalSkinSurface{"AbsorbSurface", logicalAbsorbLayer, absorbSurface};
+    // const auto absorbSurface{new G4OpticalSurface("AbsorbSurface", unified, polished, dielectric_metal)};
+    // absorbSurface->SetMaterialPropertiesTable(absorbSurfacePropertiesTable);
+    // new G4LogicalSkinSurface{"AbsorbSurface", logicalAbsorbLayer, absorbSurface};
 }
 
 } // namespace MACE::PhaseI::Detector::Definition
