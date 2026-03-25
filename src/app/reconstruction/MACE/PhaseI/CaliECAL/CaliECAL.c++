@@ -75,6 +75,7 @@ auto CaliECAL::Main(int argc, char* argv[]) const -> int {
 
     const auto& ecal{MACE::Detector::Description::ECAL::Instance()};
     const auto& moduleList{ecal.Array().moduleList};
+    const auto& calibrationFactor{ecal.CalibrationFactor()};
 
     using ECALEnergy = Mustard::Data::TupleModel<
         Mustard::Data::Value<double, "Edep", "Energy deposition of the cluster">,
@@ -104,8 +105,8 @@ auto CaliECAL::Main(int argc, char* argv[]) const -> int {
             energy += e;
 
             auto hitPE = Get<"nOptPho">(*hitIt->second);
-            if (cli["--optics"] == true and hitPE > 3) {
-                pe += hitPE;
+            if (cli["--optics"] == true and hitPE > 100) {
+                pe += calibrationFactor.at(moduleList.at(module).typeID).at(0) * hitPE + calibrationFactor.at(moduleList.at(module).typeID).at(1);
             }
         }
 

@@ -211,7 +211,8 @@ ECAL::ECAL() :
     fMPPCEnergyBin{this, {}},
     fMPPCEfficiency{this, {}},
     // 0.1(epoxy)+0.1(cathode),window change  from epoxy to epoxy&silicon Pixels, may change name "window" later
-    fWaveformIntegralTime{this, fScintillationTimeConstant1 * 7} {
+    fWaveformIntegralTime{this, fScintillationTimeConstant1 * 7},
+    fCalibrationFactor{this, {}} {
     // CsI(pure) default for MACE Phase-I (in UsePhaseIDefault.c++)
     // CsI(Tl) default for MACE Phase-II
     fScintillationEnergyBin = {1.75799786_eV, 1.77994996_eV, 1.798603934_eV, 1.814143751_eV, 1.834661538_eV, 1.854466567_eV, 1.871980063_eV,
@@ -294,6 +295,18 @@ ECAL::ECAL() :
                        0.217013978, 0.206721701, 0.200096265, 0.191250653, 0.181575856, 0.168947005, 0.159534377,
                        0.149674853, 0.139503115, 0.129670093, 0.120230653, 0.108280609, 0.091831406, 0.098424138,
                        0.083937488, 0.073056832, 0.060399447, 0.047887957, 0.034501313};
+    fCalibrationFactor = {
+        {0.01121720,  -4.942114}, // type 2
+        {0.01191705,  -6.534315}, // type 1
+        {0.008936677, -4.482827}, // type 3
+        {0.009161615, -4.261109}, // type 4
+        {0.009702860, -3.982727}, // type 5
+        {0.009788404, -3.824663}, // type 6
+        {0.009979243, -3.575099}, // type 7
+        {0.01003054,  -3.995777}, // type 8
+        {0.01013935,  -4.069461}, // type 9
+        {0.01029885,  -4.225282}  // type 10
+    };
 }
 
 auto ECAL::CalculateArrayInformation() const -> ArrayInformation {
@@ -493,6 +506,7 @@ auto ECAL::ImportAllValue(const YAML::Node& node) -> void {
     ImportValue(node, fMPPCEnergyBin, "MPPCEnergyBin");
     ImportValue(node, fMPPCEfficiency, "MPPCEfficiency");
     ImportValue(node, fWaveformIntegralTime, "WaveformIntegralTime");
+    ImportValue(node, fCalibrationFactor, "CalibrationFactor");
 }
 
 auto ECAL::ExportAllValue(YAML::Node& node) const -> void {
@@ -525,6 +539,7 @@ auto ECAL::ExportAllValue(YAML::Node& node) const -> void {
     ExportValue(node, fMPPCEnergyBin, "MPPCEnergyBin");
     ExportValue(node, fMPPCEfficiency, "MPPCEfficiency");
     ExportValue(node, fWaveformIntegralTime, "WaveformIntegralTime");
+    ExportValue(node, fCalibrationFactor, "CalibrationFactor");
 }
 
 } // namespace MACE::Detector::Description

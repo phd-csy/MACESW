@@ -81,6 +81,7 @@ public:
     auto MPPCEfficiency() const -> const auto& { return *fMPPCEfficiency; }
 
     auto WaveformIntegralTime() const -> auto { return *fWaveformIntegralTime; }
+    auto CalibrationFactor() const -> const auto& { return *fCalibrationFactor; }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -118,6 +119,7 @@ public:
     auto MPPCEfficiency(std::vector<double> val) -> void { fMPPCEfficiency = std::move(val); }
 
     auto WaveformIntegralTime(double val) { fWaveformIntegralTime = val; }
+    auto CalibrationFactor(std::vector<muc::array2d> val) -> void { fCalibrationFactor = std::move(val); }
 
     struct ArrayInformation {
         struct Module {
@@ -174,6 +176,7 @@ private:
     Simple<std::vector<double>> fMPPCEfficiency;
 
     Simple<double> fWaveformIntegralTime;
+    Simple<std::vector<muc::array2d>> fCalibrationFactor;
 };
 
 } // namespace MACE::Detector::Description
