@@ -75,11 +75,13 @@ auto CaliECAL::Main(int argc, char* argv[]) const -> int {
 
     const auto& ecal{MACE::Detector::Description::ECAL::Instance()};
     const auto& moduleList{ecal.Array().moduleList};
-    const auto& calibrationFactor{ecal.CalibrationFactor()};
+    const auto& adcCalibrationFactor{ecal.ADCCalibrationFactors()};
+    const auto& uniformityCalibrationFactor{ecal.UniformityCalibrationFactors()};
 
     using ECALEnergy = Mustard::Data::TupleModel<
         Mustard::Data::Value<double, "Edep", "Energy deposition of the cluster">,
-        Mustard::Data::Value<int, "PE", "Photoelectron counts of the cluster">,
+        Mustard::Data::Value<double, "ADC", "Calibrated response of the cluster">,
+        Mustard::Data::Value<double, "Eexp", "Expected energy of the cluster">,
         // Mustard::Data::Value<double, "t", "Time of the track">,
         Mustard::Data::Value<muc::array3f, "Position", "Position of the cluster">,
         Mustard::Data::Value<double, "cosTheta", "Cosine of angle between the tracks">,
@@ -89,15 +91,17 @@ auto CaliECAL::Main(int argc, char* argv[]) const -> int {
 
     auto setEnergyTuple = [&](std::vector<int>& potentialSeedModule, std::unordered_map<int, std::shared_ptr<Mustard::Data::Tuple<Data::ECALSimHit>>>& hitDict, CLHEP::Hep3Vector truthHitMomentum) -> void {
         double energy{};
-        int pe{};
+        double clusterADC{};
+        double clusterEnergy{};
         CLHEP::Hep3Vector weightedPosition{};
         CLHEP::Hep3Vector clusterPosition{};
 
         auto seedModule = potentialSeedModule.begin();
         auto cluster = ECALClustering::Clusterer(*seedModule, moduleList);
         for (const auto& module : cluster) {
+            int pe{};
             auto hitIt = hitDict.find(module);
-            if (hitIt == hitDict.end() or Get<"Edep">(*hitIt->second) < 50_keV) {
+            if (hitIt == hitDict.end() or Get<"Edep">(*hitIt->second) < 500_keV) {
                 continue;
             }
             auto e = Get<"Edep">(*hitIt->second);
@@ -106,16 +110,21 @@ auto CaliECAL::Main(int argc, char* argv[]) const -> int {
 
             auto hitPE = Get<"nOptPho">(*hitIt->second);
             if (cli["--optics"] == true and hitPE > 100) {
-                pe += calibrationFactor.at(moduleList.at(module).typeID).at(0) * hitPE + calibrationFactor.at(moduleList.at(module).typeID).at(1);
+                auto& a{adcCalibrationFactor.at(moduleList.at(module).typeID)};
+                auto& u{uniformityCalibrationFactor.at(moduleList.at(module).typeID)};
+                pe += hitPE;
+                clusterADC += a * pe;
+                clusterEnergy = u * clusterADC;
             }
         }
 
         if (energy != 0) {
-            clusterPosition = weightedPosition / energy;
+            clusterPosition = weightedPosition / clusterADC;
         }
 
         Get<"Edep">(energyTuple) = energy;
-        Get<"PE">(energyTuple) = pe;
+        Get<"ADC">(energyTuple) = clusterADC;
+        Get<"Eexp">(energyTuple) = clusterEnergy;
         Get<"Position">(energyTuple) = clusterPosition;
         Get<"cosTheta">(energyTuple) = clusterPosition.cosTheta(truthHitMomentum);
         Get<"theta">(energyTuple) = clusterPosition.theta(truthHitMomentum);
