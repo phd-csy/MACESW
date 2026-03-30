@@ -69,7 +69,7 @@ auto DetectorConstruction::Construct() -> G4VPhysicalVolume* {
     auto& ecalCrystal{fWorld->NewDaughter<ECALCrystal>(fCheckOverlap)};
     auto& ecalPhotoSensor{fWorld->NewDaughter<ECALPhotoSensor>(fCheckOverlap)};
     // auto& centralBeamPipe{fWorld->NewDaughter<PhaseI::CentralBeamPipe>(fCheckOverlap)};
-    auto& target{fWorld->NewDaughter<PhaseI::Target>(fCheckOverlap)};
+    // auto& target{fWorld->NewDaughter<PhaseI::Target>(fCheckOverlap)};
     // auto& sciFiTracker{fWorld->NewDaughter<PhaseI::SciFiTracker>(fCheckOverlap)};
     // auto& ttc{fWorld->NewDaughter<PhaseI::TTC>(fCheckOverlap)};
 
