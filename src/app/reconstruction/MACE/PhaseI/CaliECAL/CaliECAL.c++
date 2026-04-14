@@ -39,6 +39,7 @@
 
 #include "ROOT/RDataFrame.hxx"
 #include "TFile.h"
+#include "TRandom.h"
 #include "TTree.h"
 
 #include "fmt/format.h"
@@ -80,6 +81,7 @@ auto CaliECAL::Main(int argc, char* argv[]) const -> int {
 
     using ECALEnergy = Mustard::Data::TupleModel<
         Mustard::Data::Value<double, "Edep", "Energy deposition of the cluster">,
+        Mustard::Data::Value<double, "PE", "Photoelectron response of the cluster">,
         Mustard::Data::Value<double, "ADC", "Calibrated response of the cluster">,
         Mustard::Data::Value<double, "Eexp", "Expected energy of the cluster">,
         // Mustard::Data::Value<double, "t", "Time of the track">,
@@ -90,41 +92,41 @@ auto CaliECAL::Main(int argc, char* argv[]) const -> int {
     Mustard::Data::Tuple<ECALEnergy> energyTuple;
 
     auto setEnergyTuple = [&](std::vector<int>& potentialSeedModule, std::unordered_map<int, std::shared_ptr<Mustard::Data::Tuple<Data::ECALSimHit>>>& hitDict, CLHEP::Hep3Vector truthHitMomentum) -> void {
-        double energy{};
+        double energyDeposit{};
+        int pe{};
         double clusterADC{};
-        double clusterEnergy{};
         CLHEP::Hep3Vector weightedPosition{};
         CLHEP::Hep3Vector clusterPosition{};
 
         auto seedModule = potentialSeedModule.begin();
         auto cluster = ECALClustering::Clusterer(*seedModule, moduleList);
         for (const auto& module : cluster) {
-            int pe{};
             auto hitIt = hitDict.find(module);
             if (hitIt == hitDict.end() or Get<"Edep">(*hitIt->second) < 500_keV) {
                 continue;
             }
-            auto e = Get<"Edep">(*hitIt->second);
-            weightedPosition += e * moduleList.at(module).centroid;
-            energy += e;
+            auto moduleEnergy = Get<"Edep">(*hitIt->second);
+            weightedPosition += moduleEnergy * moduleList.at(module).centroid;
+            energyDeposit += moduleEnergy;
 
-            auto hitPE = Get<"nOptPho">(*hitIt->second);
-            if (cli["--optics"] == true and hitPE > 100) {
+            auto modulePE = Get<"nOptPho">(*hitIt->second);
+            if (cli["--optics"] == true and modulePE > 100) {
                 auto& a{adcCalibrationFactor.at(moduleList.at(module).typeID)};
-                auto& u{uniformityCalibrationFactor.at(moduleList.at(module).typeID)};
-                pe += hitPE;
-                clusterADC += a * pe;
-                clusterEnergy = u * clusterADC;
+                pe += modulePE;
+                clusterADC += a * gRandom->Gaus(modulePE, 50);
             }
         }
 
-        if (energy != 0) {
+        if (energyDeposit != 0) {
             clusterPosition = weightedPosition / clusterADC;
         }
 
-        Get<"Edep">(energyTuple) = energy;
+        auto& u{uniformityCalibrationFactor.at(moduleList.at(*seedModule).typeID)};
+
+        Get<"Edep">(energyTuple) = energyDeposit;
+        Get<"PE">(energyTuple) = pe;
         Get<"ADC">(energyTuple) = clusterADC;
-        Get<"Eexp">(energyTuple) = clusterEnergy;
+        Get<"Eexp">(energyTuple) = u * clusterADC;
         Get<"Position">(energyTuple) = clusterPosition;
         Get<"cosTheta">(energyTuple) = clusterPosition.cosTheta(truthHitMomentum);
         Get<"theta">(energyTuple) = clusterPosition.theta(truthHitMomentum);
