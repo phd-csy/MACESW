@@ -67,7 +67,7 @@ auto DetectorConstruction::Construct() -> G4VPhysicalVolume* {
 
     fWorld = std::make_unique<PhaseI::World>();
     auto& ecalCrystal{fWorld->NewDaughter<ECALCrystal>(fCheckOverlap)};
-    // auto& ecalPhotoSensor{fWorld->NewDaughter<ECALPhotoSensor>(fCheckOverlap)};
+    auto& ecalPhotoSensor{fWorld->NewDaughter<ECALPhotoSensor>(fCheckOverlap)};
     // auto& centralBeamPipe{fWorld->NewDaughter<PhaseI::CentralBeamPipe>(fCheckOverlap)};
     // auto& target{fWorld->NewDaughter<PhaseI::Target>(fCheckOverlap)};
     // auto& sciFiTracker{fWorld->NewDaughter<PhaseI::SciFiTracker>(fCheckOverlap)};
@@ -79,7 +79,7 @@ auto DetectorConstruction::Construct() -> G4VPhysicalVolume* {
     const auto& scifiName{MACE::PhaseI::Detector::Description::SciFiTracker::Instance().Name()};
 
     const auto fECALPMSD{new SD::ECALPMSD{ecalName + "PM"}};
-    // ecalPhotoSensor.RegisterSD("ECALPMCathode", fECALPMSD);
+    ecalPhotoSensor.RegisterSD("ECALPMCathode", fECALPMSD);
 
     const auto ecalSD(new SD::ECALSD{ecalName, fECALPMSD});
     ecalCrystal.RegisterSD(ecalSD);
