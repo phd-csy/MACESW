@@ -76,8 +76,6 @@ auto CaliECAL::Main(int argc, char* argv[]) const -> int {
 
     const auto& ecal{MACE::Detector::Description::ECAL::Instance()};
     const auto& moduleList{ecal.Array().moduleList};
-    const auto& adcCalibrationFactor{ecal.ADCCalibrationFactors()};
-    const auto& uniformityCalibrationFactor{ecal.UniformityCalibrationFactors()};
 
     using ECALEnergy = Mustard::Data::TupleModel<
         Mustard::Data::Value<double, "Edep", "Energy deposition of the cluster">,
@@ -111,9 +109,8 @@ auto CaliECAL::Main(int argc, char* argv[]) const -> int {
 
             auto modulePE = Get<"nOptPho">(*hitIt->second);
             if (cli["--optics"] == true and modulePE > 100) {
-                auto& a{adcCalibrationFactor.at(moduleList.at(module).typeID)};
                 pe += modulePE;
-                clusterADC += a * gRandom->Gaus(modulePE, 50);
+                // clusterADC += a * gRandom->Gaus(modulePE, 50);
             }
         }
 
@@ -121,12 +118,8 @@ auto CaliECAL::Main(int argc, char* argv[]) const -> int {
             clusterPosition = weightedPosition / clusterADC;
         }
 
-        auto& u{uniformityCalibrationFactor.at(moduleList.at(*seedModule).typeID)};
-
         Get<"Edep">(energyTuple) = energyDeposit;
         Get<"PE">(energyTuple) = pe;
-        Get<"ADC">(energyTuple) = clusterADC;
-        Get<"Eexp">(energyTuple) = u * clusterADC;
         Get<"Position">(energyTuple) = clusterPosition;
         Get<"cosTheta">(energyTuple) = clusterPosition.cosTheta(truthHitMomentum);
         Get<"theta">(energyTuple) = clusterPosition.theta(truthHitMomentum);

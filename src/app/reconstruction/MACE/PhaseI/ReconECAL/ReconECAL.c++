@@ -94,7 +94,8 @@ auto ReconECAL::Main(int argc, char* argv[]) const -> int {
         Mustard::Data::Value<double, "dE", "Energy difference of the tracks">,
         Mustard::Data::Value<double, "dt", "Time difference of the tracks">,
         Mustard::Data::Value<double, "cosTheta", "Cosine of angle between the tracks">,
-        Mustard::Data::Value<double, "theta", "Angle between the tracks">>;
+        Mustard::Data::Value<double, "theta", "Azimuth angle of the 1st cluster">,
+        Mustard::Data::Value<double, "phi", "Zenith angle of the 1st cluster">>;
 
     Mustard::Data::Tuple<ECALEnergy> energyTuple;
 
@@ -122,7 +123,10 @@ auto ReconECAL::Main(int argc, char* argv[]) const -> int {
         Get<"Edep1">(energyTuple) = energy1;
         Get<"Position1">(energyTuple) = clusterPosition1;
         Get<"TotalEdep">(energyTuple) = energy1;
-        Get<"theta">(energyTuple) = clusterPosition1.theta(CLHEP::Hep3Vector{0, 0, 1});
+
+        const auto radius{clusterPosition1.mag()};
+        Get<"theta">(energyTuple) = std::atan2(clusterPosition1.x(), clusterPosition1.z());
+        Get<"phi">(energyTuple) = std::acos(std::clamp(clusterPosition1.y() / radius, -1., 1.));
     };
 
     auto setEnergyTuple2 = [&](std::vector<int>& potentialSeedModule, std::unordered_map<int, std::shared_ptr<Mustard::Data::Tuple<Data::ECALSimHit>>>& hitDict) -> void {
